@@ -14,14 +14,21 @@ body {
 	font-family: "Inter", sans-serif;
 	font-weight: 400;
 	display: flex;
+	flex-direction: column;
+}
+
+main {
+	width: 100%;
+	height: 100%;
+	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-direction: column;
+	flex-direction: row;
 	gap: 2vh;
 }
 
 h1 {
-	margin-bottom: 0;
+	text-align: center;
 }
 
 form {
@@ -71,4 +78,9 @@ select {
 	padding-right: 2.5rem;
 	height: 3rem;
 	width: 100%;
+}
+
+footer {
+	text-align: center;
+	padding: 2vh;
 }

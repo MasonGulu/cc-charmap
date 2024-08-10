@@ -1,6 +1,19 @@
 :root {
 	--background: #ffffff;
 	--text: #09090b;
+	--accent: #0067c5;
+	--border: #838c9a;
+	--accent-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0d1117;
+		--text: #ffffff;
+		--accent: #0067c5;
+		--border: #838c9a;
+		--accent-text: #ffffff;
+	}
 }
 
 html,
@@ -15,6 +28,8 @@ body {
 	font-weight: 400;
 	display: flex;
 	flex-direction: column;
+	background-color: var(--background);
+	color: var(--text);
 }
 
 main {
@@ -38,7 +53,7 @@ form {
 }
 
 section#format {
-	border: 1px solid #838c9a;
+	border: 1px solid var(--border);
 	border-radius: 4px;
 	display: inline-grid;
 	gap: 0.25rem;
@@ -57,8 +72,8 @@ section > button {
 }
 
 section > button.active {
-	background-color: #0067c5;
-	color: white;
+	background-color: var(--accent);
+	color: var(--accent-text);
 }
 
 section.colors {
@@ -83,4 +98,8 @@ select {
 footer {
 	text-align: center;
 	padding: 2vh;
+}
+
+a {
+	color: var(--accent);
 }

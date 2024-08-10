@@ -4,9 +4,25 @@ let charTerm = new Term(document.getElementById("charPreview"));
 
 let bgSelect = document.getElementById("bgSelect");
 let fgSelect = document.getElementById("fgSelect");
+
+let bgCustom = document.getElementById("bgcustom");
+let fgCustom = document.getElementById("fgcustom");
+
+function setColors(t) {
+	if (fgSelect.value != "custom") {
+		t.setfg(Term.colors[fgSelect.value]);
+	} else {
+		t.setfg(17)
+	}
+	if (bgSelect.value != "custom") {
+		t.setbg(Term.colors[bgSelect.value]);
+	} else {
+		t.setbg(16)
+	}
+}
+
 function render() {
-	term.setfg(Term.colors[fgSelect.value]);
-	term.setbg(Term.colors[bgSelect.value]);
+	setColors(term)
 	term.setScale(3);
 	term.setSize(18, 17);
 	for (i = 0; i < 256; i++) {
@@ -25,17 +41,42 @@ function render() {
 		term.write(x.toString(16).toUpperCase());
 	}
 }
+fgCustom.addEventListener("change", function(e) {
+	console.log("changed")
+	term.setPaletteColor(17, fgCustom.value)
+	charTerm.setPaletteColor(17, fgCustom.value)
+	render()
+})
+bgCustom.addEventListener("change", function(e) {
+	term.setPaletteColor(16, bgCustom.value)
+	charTerm.setPaletteColor(16, bgCustom.value)
+	render()
+})
 
 bgSelect.value = "black";
 bgSelect.addEventListener("change", function (e) {
-	term.setbg(Term.colors[bgSelect.value]);
-	charTerm.setbg(Term.colors[bgSelect.value]);
+	if (bgSelect.value != "custom") {
+		term.setbg(Term.colors[bgSelect.value]);
+		charTerm.setbg(Term.colors[bgSelect.value]);
+		bgCustom.style.visibility = "hidden";
+	} else {
+		term.setbg(16);
+		charTerm.setbg(16);
+		bgCustom.style.visibility = "visible";
+	}
 	render();
 });
 fgSelect.value = "white";
 fgSelect.addEventListener("change", function (e) {
-	term.setfg(Term.colors[fgSelect.value]);
-	charTerm.setfg(Term.colors[fgSelect.value]);
+	if (fgSelect.value != "custom") {
+		term.setfg(Term.colors[fgSelect.value]);
+		charTerm.setfg(Term.colors[fgSelect.value]);
+		fgCustom.style.visibility = "hidden";
+	} else {
+		term.setbg(17);
+		charTerm.setbg(17);
+		fgCustom.style.visibility = "visible";
+	}
 	render();
 });
 
@@ -54,14 +95,21 @@ charTerm.setScale(20);
 charTerm.setSize(1, 1);
 render();
 
+let currentChar = 0
+function setChar(i) {
+	if (i != currentChar) {
+		currentChar = i;
+		setColors(charTerm);
+		charTerm.setChar(0, 0, i);
+	}
+}
+
 term.setMousemoveHandler((x, y) => {
 	x -= 2;
 	y -= 1;
 	if (x >= 0 && y >= 0) {
 		let idx = y * 16 + x;
-		charTerm.setbg(Term.colors[bgSelect.value]);
-		charTerm.setfg(Term.colors[fgSelect.value]);
-		charTerm.setChar(0, 0, idx);
+		setChar(idx);
 		if (formattingMode == "dec") {
 			characterInfo.innerHTML = `Character: ${idx}`;
 		} else if (formattingMode == "hex") {

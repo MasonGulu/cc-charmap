@@ -19,25 +19,6 @@ fontMapCanvas.width = fontMapImage.width;
 fontMapCanvas.height = fontMapImage.height;
 fontMapCtx.drawImage(fontMapImage, 0, 0);
 
-const colors = [
-	"#f0f0f0",
-	"#f2b233",
-	"#e57fd8",
-	"#99b2f2",
-	"#dede6c",
-	"#7fcc19",
-	"#f2b2cc",
-	"#4c4c4c",
-	"#999999",
-	"#4c99b2",
-	"#b266e5",
-	"#3366cc",
-	"#7f664c",
-	"#57a64e",
-	"#cc4c4c",
-	"#111111",
-];
-
 const charHeight = 11;
 const charWidth = 8;
 
@@ -51,276 +32,268 @@ function rgbToFillstyle(r, g, b, a) {
 }
 
 class Term {
-	constructor(termCanvas) {
-		this.termCanvas = termCanvas;
-		this.termCanvasCtx = termCanvas.getContext("2d");
-		this.bg = 15;
-		this.fg = 0;
-		this.width = 51;
-		this.height = 19;
-		this.scale = 1;
-		this.cursor = {
-			x: 0,
-			y: 0,
-		};
-		this.fontMapScaledCanvas = document.createElement("canvas");
-		this.fontMapScaledCtx = this.fontMapScaledCanvas.getContext("2d");
-	}
-	clear() {
-		this.termCanvasCtx.fillStyle = colors[this.bg];
-		this.termCanvasCtx.fillRect(
-			0,
-			0,
-			this.termCanvasCtx.canvas.width,
-			this.termCanvasCtx.canvas.height
-		);
-	}
+    constructor(termCanvas) {
+        this.termCanvas = termCanvas
+        this.termCanvasCtx = termCanvas.getContext("2d")
+        this.bg = 15
+        this.fg = 0
+        this.width = 51
+        this.height = 19
+        this.scale = 1
+        this.cursor = {
+            x: 0,
+            y: 0
+        }
+        this.fontMapScaledCanvas = document.createElement("canvas")
+        this.fontMapScaledCtx = this.fontMapScaledCanvas.getContext("2d")
+        this.paletteColors = []
+        for (let i = 0; i < Term.paletteColors.length; i++) {
+            this.paletteColors[i] = Term.paletteColors[i]
+        }
+    }
+    clear() {
+        this.termCanvasCtx.fillStyle = this.paletteColors[this.bg]
+        this.termCanvasCtx.fillRect(0, 0, this.termCanvasCtx.canvas.width, this.termCanvasCtx.canvas.height)
+    }
+    
+    setSize(w, h) {
+        this.width = w
+        this.height = h
+        this.termCanvasCtx.canvas.width = w * charScreenWidth * this.scale
+        this.termCanvasCtx.canvas.height = h * charScreenHeight * this.scale
+        this.clear()
+    }
 
-	setSize(w, h) {
-		this.width = w;
-		this.height = h;
-		this.termCanvasCtx.canvas.width = w * charScreenWidth * this.scale;
-		this.termCanvasCtx.canvas.height = h * charScreenHeight * this.scale;
-		this.clear();
-	}
+    #scaleChar(ch) {
+        let charY = Math.floor(ch / charMapWidth)
+        let charX = ch % charMapWidth
+    
+        let fromX = charX * charWidth
+        let toX = charX * charWidth * this.scale
+    
+        let fromY = charY * charHeight
+        let toY = charY * charHeight * this.scale
+    
+        this.fontMapScaledCtx.clearRect(toX, toY, charWidth * this.scale, charHeight * this.scale)
+        const imageData = fontMapCtx.getImageData(fromX, fromY, charWidth, charHeight)
+        const data = imageData.data
+        for (let y = 0; y < charHeight; y++) {
+            for (let x = 0; x < charWidth; x++) {
+                // Get the color of the current pixel
+                const index = (y * charWidth + x) * 4;
+                const r = data[index];
+                const g = data[index + 1];
+                const b = data[index + 2];
+                const a = data[index + 3];
+    
+                let fillStyle
+                if (a > 127) {
+                    // fg color
+                    fillStyle = this.paletteColors[this.fg]
+                } else {
+                    // bg color
+                    fillStyle = this.paletteColors[this.bg]
+                }
+                this.fontMapScaledCtx.fillStyle = fillStyle
+    
+                // Draw a scaled rectangle for the current pixel on the target canvas
+                // fontMapScaledCtx.fillStyle = rgbToFillstyle(r,g,b,a)
+                this.fontMapScaledCtx.fillRect(toX + x * this.scale, toY + y * this.scale, this.scale, this.scale)
+            }
+        }
+    }
 
-	#scaleChar(ch) {
-		let charY = Math.floor(ch / charMapWidth);
-		let charX = ch % charMapWidth;
+    setScale(i) {
+        this.scale = i
+        const originalWidth = fontMapImage.width
+        const originalHeight = fontMapImage.height
+    
+        const scaledWidth = originalWidth * this.scale
+        const scaledHeight = originalHeight * this.scale
+    
+        this.fontMapScaledCtx.canvas.width = scaledWidth
+        this.fontMapScaledCtx.canvas.height = scaledHeight
+        this.fontMapScaledCtx.clearRect(0, 0, scaledWidth, scaledHeight)
+        
+        for (i = 0; i < 256; i++) {
+            this.#scaleChar(i)
+        }
+        term.setSize(this.width, this.height)
+    }
+    
+    /**
+     * 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} ch
+     */
+    setChar(x, y, ch) {
+        let charY = Math.floor(ch / charMapWidth)
+        let charX = ch % charMapWidth
+    
+        let charW = charScreenWidth * this.scale
+        let charH = charScreenHeight * this.scale
+    
+        this.#scaleChar(ch)
+        this.termCanvasCtx.drawImage(
+            this.fontMapScaledCtx.canvas, 
+            // from x, y
+            (charX * charWidth + 1) * this.scale, (charY * charHeight + 1) * this.scale,
+            // from w, h 
+            charW, charH,
+            // to x, y 
+            x * charScreenWidth * this.scale, y * charScreenHeight * this.scale,
+            // to w, h 
+            charW, charH
+        )
+        // console.log(ch)
+    }
+    
+    /**
+     * @param {String} str
+     */
+    write(str) {
+        for (i = 0; i < str.length; i++) {
+            let code = str.charCodeAt(i)
+            this.setChar(this.cursor.x, this.cursor.y, code)
+            this.cursor.x++
+            if (this.cursor.x >= this.width) {
+                this.#newline()
+            }
+        }
+    }
+    
+    scroll(i) {
+        // oh god this is jank
+        let charW = charScreenWidth * scale
+        let charH = charScreenHeight * scale
+        termCanvasCtx.drawImage(
+            termCanvasCtx.canvas,
+            0, 0,
+            width * charW, height * charH,
+            0, -i * charScreenHeight * scale,
+            width * charW, height * charH
+        )
+        termCanvasCtx.fillStyle = this.paletteColors[bg]
+        termCanvasCtx.fillRect(0, (height - 1) * charH, termCanvasCtx.canvas.width, charH)
+    }
+    
+    #newline() {
+        this.cursor.x = 0
+        this.cursor.y++
+        if (this.cursor.y >= this.height) {
+            this.cursor.y = this.height - 1
+            this.scroll(1)
+        }
+    }
+    
+    print(str) {
+        for (i = 0; i < str.length; i++) {
+            let code = str.charCodeAt(i)
+            let ch = str.charAt(i)
+            if (ch == '\n') {
+                this.#newline()
+            } else {
+                this.setChar(cursor.x, cursor.y, code)
+                cursor.x++
+                if (cursor.x >= width) {
+                    this.#newline()
+                }
+            }
+        }
+        this.#newline()
+    }
+    
+    blit(text, fgstr, bgstr) {
+        if (text.length != fgstr.length || fgstr.length != bgstr.length) {
+            error("Blit arguments must be the same length!")
+        }
+        for (i = 0; i < text.length; i++) {
+            let code = text.charCodeAt(i)
+            let fgch = fgstr.charAt(i)
+            let bgch = bgstr.charAt(i)
+            fg = parseInt(fgch, 16)
+            bg = parseInt(bgch, 16)
+            drawCharacter(cursor.x, cursor.y, code)
+            cursor.x++
+        }
+    }
+    
+    setCursorPos(x,y) {
+        this.cursor.x = x
+        this.cursor.y = y
+    }
+    
+    setfg(color) {
+        this.fg = color
+    }
+    
+    setbg(color) {
+        this.bg = color
+    }
+    
+    setClickHandler(handle) {
+        // why does this work...
+        let test = this
+        this.termCanvas.addEventListener("click", function(e) {
+            let rect = e.target.getBoundingClientRect()
+            let x = e.clientX - rect.left
+            let y = e.clientY - rect.top
+            handle(Math.floor(x / charScreenWidth / test.scale), Math.floor(y / charScreenHeight / test.scale))
+        })
+    }
+    
+    setMousemoveHandler(handle) {
+        let test = this
+        this.termCanvas.addEventListener("mousemove", function(e) {
+            let rect = e.target.getBoundingClientRect()
+            let x = e.clientX - rect.left
+            let y = e.clientY - rect.top
+            handle(Math.floor(x / charScreenWidth / test.scale), Math.floor(y / charScreenHeight / test.scale))
+        })
+    }
 
-		let fromX = charX * charWidth;
-		let toX = charX * charWidth * this.scale;
+    // Set a custom palette for a given color index, color should be a string HTML color descriptor like #123456
+    // Additional colors (i.e. 16, 17) are technically allowed.
+    setPaletteColor(i, color) {
+        this.paletteColors[i] = color
+    }
 
-		let fromY = charY * charHeight;
-		let toY = charY * charHeight * this.scale;
+    static colors = {
+        white:0,
+        orange:1,
+        magenta:2,
+        lightBlue:3,
+        yellow:4,
+        lime:5,
+        pink:6,
+        gray:7,
+        lightGray:8,
+        cyan:9,
+        purple:10,
+        blue:11,
+        brown:12,
+        green:13,
+        red:14,
+        black:15
+    }
 
-		this.fontMapScaledCtx.clearRect(
-			toX,
-			toY,
-			charWidth * this.scale,
-			charHeight * this.scale
-		);
-		const imageData = fontMapCtx.getImageData(
-			fromX,
-			fromY,
-			charWidth,
-			charHeight
-		);
-		const data = imageData.data;
-		for (let y = 0; y < charHeight; y++) {
-			for (let x = 0; x < charWidth; x++) {
-				// Get the color of the current pixel
-				const index = (y * charWidth + x) * 4;
-				const r = data[index];
-				const g = data[index + 1];
-				const b = data[index + 2];
-				const a = data[index + 3];
-
-				if (a > 127) {
-					// fg color
-					this.fontMapScaledCtx.fillStyle = colors[this.fg];
-				} else {
-					// bg color
-					this.fontMapScaledCtx.fillStyle = colors[this.bg];
-				}
-
-				// Draw a scaled rectangle for the current pixel on the target canvas
-				// fontMapScaledCtx.fillStyle = rgbToFillstyle(r,g,b,a)
-				this.fontMapScaledCtx.fillRect(
-					toX + x * this.scale,
-					toY + y * this.scale,
-					this.scale,
-					this.scale
-				);
-			}
-		}
-	}
-
-	setScale(i) {
-		this.scale = i;
-		const originalWidth = fontMapImage.width;
-		const originalHeight = fontMapImage.height;
-
-		const scaledWidth = originalWidth * this.scale;
-		const scaledHeight = originalHeight * this.scale;
-
-		this.fontMapScaledCtx.canvas.width = scaledWidth;
-		this.fontMapScaledCtx.canvas.height = scaledHeight;
-		this.fontMapScaledCtx.clearRect(0, 0, scaledWidth, scaledHeight);
-
-		for (i = 0; i < 256; i++) {
-			this.#scaleChar(i);
-		}
-		term.setSize(this.width, this.height);
-	}
-
-	/**
-	 *
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {number} ch
-	 */
-	setChar(x, y, ch) {
-		let charY = Math.floor(ch / charMapWidth);
-		let charX = ch % charMapWidth;
-
-		let charW = charScreenWidth * this.scale;
-		let charH = charScreenHeight * this.scale;
-
-		this.#scaleChar(ch);
-		this.termCanvasCtx.drawImage(
-			this.fontMapScaledCtx.canvas,
-			// from x, y
-			(charX * charWidth + 1) * this.scale,
-			(charY * charHeight + 1) * this.scale,
-			// from w, h
-			charW,
-			charH,
-			// to x, y
-			x * charScreenWidth * this.scale,
-			y * charScreenHeight * this.scale,
-			// to w, h
-			charW,
-			charH
-		);
-		// console.log(ch)
-	}
-
-	/**
-	 * @param {String} str
-	 */
-	write(str) {
-		for (i = 0; i < str.length; i++) {
-			let code = str.charCodeAt(i);
-			this.setChar(this.cursor.x, this.cursor.y, code);
-			this.cursor.x++;
-			if (this.cursor.x >= this.width) {
-				this.#newline();
-			}
-		}
-	}
-
-	scroll(i) {
-		// oh god this is jank
-		let charW = charScreenWidth * scale;
-		let charH = charScreenHeight * scale;
-		termCanvasCtx.drawImage(
-			termCanvasCtx.canvas,
-			0,
-			0,
-			width * charW,
-			height * charH,
-			0,
-			-i * charScreenHeight * scale,
-			width * charW,
-			height * charH
-		);
-		termCanvasCtx.fillStyle = colors[bg];
-		termCanvasCtx.fillRect(
-			0,
-			(height - 1) * charH,
-			termCanvasCtx.canvas.width,
-			charH
-		);
-	}
-
-	#newline() {
-		this.cursor.x = 0;
-		this.cursor.y++;
-		if (this.cursor.y >= this.height) {
-			this.cursor.y = this.height - 1;
-			this.scroll(1);
-		}
-	}
-
-	print(str) {
-		for (i = 0; i < str.length; i++) {
-			let code = str.charCodeAt(i);
-			let ch = str.charAt(i);
-			if (ch == "\n") {
-				this.#newline();
-			} else {
-				this.setChar(cursor.x, cursor.y, code);
-				cursor.x++;
-				if (cursor.x >= width) {
-					this.#newline();
-				}
-			}
-		}
-		this.#newline();
-	}
-
-	blit(text, fgstr, bgstr) {
-		if (text.length != fgstr.length || fgstr.length != bgstr.length) {
-			error("Blit arguments must be the same length!");
-		}
-		for (i = 0; i < text.length; i++) {
-			let code = text.charCodeAt(i);
-			let fgch = fgstr.charAt(i);
-			let bgch = bgstr.charAt(i);
-			fg = parseInt(fgch, 16);
-			bg = parseInt(bgch, 16);
-			drawCharacter(cursor.x, cursor.y, code);
-			cursor.x++;
-		}
-	}
-
-	setCursorPos(x, y) {
-		this.cursor.x = x;
-		this.cursor.y = y;
-	}
-
-	setfg(color) {
-		this.fg = color;
-	}
-
-	setbg(color) {
-		this.bg = color;
-	}
-
-	setClickHandler(handle) {
-		// why does this work...
-		let test = this;
-		this.termCanvas.addEventListener("click", function (e) {
-			let rect = e.target.getBoundingClientRect();
-			let x = e.clientX - rect.left;
-			let y = e.clientY - rect.top;
-			handle(
-				Math.floor(x / charScreenWidth / test.scale),
-				Math.floor(y / charScreenHeight / test.scale)
-			);
-		});
-	}
-
-	setMousemoveHandler(handle) {
-		let test = this;
-		this.termCanvas.addEventListener("mousemove", function (e) {
-			let rect = e.target.getBoundingClientRect();
-			let x = e.clientX - rect.left;
-			let y = e.clientY - rect.top;
-			handle(
-				Math.floor(x / charScreenWidth / test.scale),
-				Math.floor(y / charScreenHeight / test.scale)
-			);
-		});
-	}
-
-	static colors = {
-		white: 0,
-		orange: 1,
-		magenta: 2,
-		lightBlue: 3,
-		yellow: 4,
-		lime: 5,
-		pink: 6,
-		gray: 7,
-		lightGray: 8,
-		cyan: 9,
-		purple: 10,
-		blue: 11,
-		brown: 12,
-		green: 13,
-		red: 14,
-		black: 15,
-	};
+    static paletteColors = [
+        "#f0f0f0",
+        "#f2b233",
+        "#e57fd8",
+        "#99b2f2",
+        "#dede6c",
+        "#7fcc19",
+        "#f2b2cc",
+        "#4c4c4c",
+        "#999999",
+        "#4c99b2",
+        "#b266e5",
+        "#3366cc",
+        "#7f664c",
+        "#57a64e",
+        "#cc4c4c",
+        "#111111"
+    ]
 }

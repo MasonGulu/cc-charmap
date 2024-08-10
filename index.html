@@ -1,60 +1,85 @@
 <!DOCTYPE html>
-<head>
-    <style>
-        body {
-            background-color: gray;
-        }
-    </style>
-</head>
-<body>
-    <div style="display:flex">
-        <canvas id="term"></canvas>
-        <div>
-            <canvas id="charPreview"></canvas>
-            <p id="characterInfo">Character: 0</p>
-            <select id="formatSelect">
-                <option value="dec">Decimal</option>
-                <option value="hex">Hex</option>
-                <option value="raw">Raw</option>
-            </select>
-            <select id="fgSelect">
-                <option value="white">White</option>
-                <option value="orange">Orange</option>
-                <option value="magenta">Magenta</option>
-                <option value="lightBlue">lightBlue</option>
-                <option value="yellow">Yellow</option>
-                <option value="lime">Lime</option>
-                <option value="pink">Pink</option>
-                <option value="gray">Gray</option>
-                <option value="lightGray">Light Gray</option>
-                <option value="cyan">Cyan</option>
-                <option value="purple">Purple</option>
-                <option value="blue">Blue</option>
-                <option value="brown">Brown</option>
-                <option value="green">Green</option>
-                <option value="red">Red</option>
-                <option value="black">Black</option>
-            </select>
-            <select id="bgSelect">
-                <option value="white">White</option>
-                <option value="orange">Orange</option>
-                <option value="magenta">Magenta</option>
-                <option value="lightBlue">lightBlue</option>
-                <option value="yellow">Yellow</option>
-                <option value="lime">Lime</option>
-                <option value="pink">Pink</option>
-                <option value="gray">Gray</option>
-                <option value="lightGray">Light Gray</option>
-                <option value="cyan">Cyan</option>
-                <option value="purple">Purple</option>
-                <option value="blue">Blue</option>
-                <option value="brown">Brown</option>
-                <option value="green">Green</option>
-                <option value="red">Red</option>
-                <option value="black">Black</option>
-            </select>
-        </div>
-    </div>
-    <script type="text/javascript" src="cc_term.js"></script>
-    <script type="text/javascript" src="test.js"></script>
-</body>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ComputerCraft Character Map</title>
+		<link rel="stylesheet" href="/styles.css" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<h1>Character Map</h1>
+
+		<form>
+			<div>
+				<label>Display</label>
+				<section id="format">
+					<button class="active">Dec</button>
+					<button>Hex</button>
+					<button>Raw</button>
+				</section>
+			</div>
+
+			<section class="colors">
+				<div>
+					<label for="fgSelect">Text</label>
+					<select id="fgSelect">
+						<option value="white">White</option>
+						<option value="orange">Orange</option>
+						<option value="magenta">Magenta</option>
+						<option value="lightBlue">lightBlue</option>
+						<option value="yellow">Yellow</option>
+						<option value="lime">Lime</option>
+						<option value="pink">Pink</option>
+						<option value="gray">Gray</option>
+						<option value="lightGray">Light Gray</option>
+						<option value="cyan">Cyan</option>
+						<option value="purple">Purple</option>
+						<option value="blue">Blue</option>
+						<option value="brown">Brown</option>
+						<option value="green">Green</option>
+						<option value="red">Red</option>
+						<option value="black">Black</option>
+					</select>
+				</div>
+
+				<div>
+					<label for="bgSelect">Background</label>
+					<select id="bgSelect">
+						<option value="white">White</option>
+						<option value="orange">Orange</option>
+						<option value="magenta">Magenta</option>
+						<option value="lightBlue">lightBlue</option>
+						<option value="yellow">Yellow</option>
+						<option value="lime">Lime</option>
+						<option value="pink">Pink</option>
+						<option value="gray">Gray</option>
+						<option value="lightGray">Light Gray</option>
+						<option value="cyan">Cyan</option>
+						<option value="purple">Purple</option>
+						<option value="blue">Blue</option>
+						<option value="brown">Brown</option>
+						<option value="green">Green</option>
+						<option value="red">Red</option>
+						<option value="black">Black</option>
+					</select>
+				</div>
+			</section>
+		</form>
+
+		<div style="display: flex">
+			<canvas id="term"></canvas>
+			<div>
+				<canvas id="charPreview"></canvas>
+				<p id="characterInfo">Character: 0</p>
+			</div>
+		</div>
+		<script type="text/javascript" src="cc_term.js"></script>
+		<script type="text/javascript" defer src="index.js"></script>
+	</body>
+</html>

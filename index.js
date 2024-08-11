@@ -72,7 +72,6 @@ function render() {
 	}
 }
 fgCustom.addEventListener("change", function(e) {
-	console.log("changed")
 	term.setPaletteColor(17, fgCustom.value)
 	charTerm.setPaletteColor(17, fgCustom.value)
 	render()
@@ -121,9 +120,11 @@ formatButtons.forEach((btn) => {
 	});
 });
 
-charTerm.setScale(20);
-charTerm.setSize(1, 1);
-render();
+setTimeout(function() {
+	charTerm.setScale(20);
+	charTerm.setSize(1, 1);
+	render();
+}, 100)
 
 let currentChar = 0
 function setChar(i) {

@@ -7,24 +7,32 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 // To use simply instantiate a new Term, passing in a Canvas.
 
+const fontMapCanvas = document.createElement("canvas");
+const fontMapCtx = fontMapCanvas.getContext("2d");
+
 const fontMapImage = new Image();
+fontMapImage.onload = function() {
+    fontMapCanvas.width = fontMapImage.width;
+    fontMapCanvas.height = fontMapImage.height;
+    fontMapCtx.drawImage(fontMapImage, 0, 0);
+}
 // This font is from Computercraft, and is under CCPL.
 fontMapImage.src =
 	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAABDRJREFUaN7tmD+LI0cQxV/QwQQD+zAKFFzQmAk6WMxgFFTQmOZ4gTgUiGMw4jBGgTgu2GDDwRTrr6xP4HUwZy/c9OweB3u6QAVCwfyorn79+i/wYpgBBB4AWBWQJxrxALwR8m9z4G5wo60/Aq3Q/VzL4O6e3wKbeoZBbhOwNcRahjsjuf4IbInjx1ovCDM8AL1Vgc/xAIC4VLDLGeRSASVYNxxhRhKgz4D7N94NB7hz3aPjfLzc2W0Eku54MKtkYLfawOnrvnTGSg2OVZuNRhZ4rVTrVmMmCfhCN4HFb99L6VWi2LQ9ACBUgbxNDRsQQFMBkpeGjKFbApCMG8SwdnjNVISHeMDnDLFWZhq7LdiABGO1CWqDtgcIlud7fCGljWatr90MCIhzy6mXViVKIhtQM2DHELqxBImkN/PBGrheK4yNZSAizMfixBg8iAoA0cylEKUgUQ3Z1Ext7hbMaD0ZEPkjKo1so43uWRZUpLnUbyWplCKGbbk7zaX+4GPR/f3OGe7LMFQAqagUiWFbtJsDfz4BKtIcKFMNElUHskYbvZjM5LVe/Agx2phdkuRWKsskJBVKSinE2KRKBo3GyfQxNkJNqEBJiYxssASkQYyxqQJbiUp3YlkANjIaJbqFrxD6Ims2URDQojDU590EEAULE7Oxg20s5wNDx09jpaPhpJ2oE0PiUPEksoqcEkNfBySpMItKVDXDaDkziOqaZ1w9Lh2zvp/cAICW/a/dcwDZ7Lazj4fNIds0L8gGP82X4t1pmhdqIgO6ipDFKA0UyQbzJsZcApWGlGO9iRLK2GRmBW/ZV5oo4UlsoNLEF/HTN8h4vvkH55vH/3+XAACcz+fzzc3NzePj42sBF48nDf5eEurVgdeX+vxFXAL4mtVjDTEn9Ev7BTslHpEbALn23aI5D3hnK+BDDdAoQni/Te5VoEQ5N3hv+4DfqxmiyBbvkALeVmtwI0dkrOpFgtCFXd+jHCMyEAHpNN/4toyxYACOhu22cgLZ8niEBiBq3zSf5hl6LxHarBGVyOoF5HiEVmvca3Xb3Zb6ZqEVAEu36XZBs79WaIC9drVt0QGUlw7V5VWlPraWErMdW0v9mqn2CLIH9gIEINWeH8zM9sXd3axy75YkaSyllMLaC4C7u/te4ziOVWDKsLfFDBPwR7NYw6WvLwAwro6tpQQ7tkytjfNeJDPtTQISardFSTJT2kmQ1of5CeQkSeIgSWlVyTBIktJJkriuADs9BSs1jDIzs2nYaYeXel0uIfXk6un/GVfDXnD1rczMqpYLIYQQ3pdJpwqQc845u9zdv83VU4Zfmpxz5vLT2WVdzTS5GseWqe3nUjZ7QHtw0pnV28PkqMnVWhBKPllztQhgMvdyBp4kKXO+7dl/rs4552DhhZmMEde4xmXi8XNcgStwBa7AFbgCV+AKfAH8C7HCviLvf2ULAAAAAElFTkSuQmCC";
 
-const fontMapCanvas = document.createElement("canvas");
-const fontMapCtx = fontMapCanvas.getContext("2d");
-
-fontMapCanvas.width = fontMapImage.width;
-fontMapCanvas.height = fontMapImage.height;
-fontMapCtx.drawImage(fontMapImage, 0, 0);
-
+// Size each character is allocated in the font map
 const charHeight = 11;
 const charWidth = 8;
 
+// character data offset
+const charXOffset = 1;
+const charYOffset = 1;
+
+// Size of character data
 const charScreenHeight = 9;
 const charScreenWidth = 6;
 
+// width of character map
 const charMapWidth = 16;
 
 function rgbToFillstyle(r, g, b, a) {
@@ -44,12 +52,11 @@ class Term {
             x: 0,
             y: 0
         }
-        this.fontMapScaledCanvas = document.createElement("canvas")
-        this.fontMapScaledCtx = this.fontMapScaledCanvas.getContext("2d")
         this.paletteColors = []
         for (let i = 0; i < Term.paletteColors.length; i++) {
             this.paletteColors[i] = Term.paletteColors[i]
         }
+        // wait for image to load
     }
     clear() {
         this.termCanvasCtx.fillStyle = this.paletteColors[this.bg]
@@ -68,10 +75,10 @@ class Term {
         let charY = Math.floor(ch / charMapWidth)
         let charX = ch % charMapWidth
     
-        let fromX = charX * charWidth + 1
+        let fromX = charX * charWidth + charXOffset
         let toX = x * charScreenWidth * this.scale
     
-        let fromY = charY * charHeight + 1
+        let fromY = charY * charHeight + charYOffset
         let toY = y * charScreenHeight * this.scale
     
         this.termCanvasCtx.clearRect(toX, toY, charScreenWidth * this.scale, charScreenHeight * this.scale)
@@ -106,16 +113,6 @@ class Term {
 
     setScale(i) {
         this.scale = i
-        const originalWidth = fontMapImage.width
-        const originalHeight = fontMapImage.height
-    
-        const scaledWidth = originalWidth * this.scale
-        const scaledHeight = originalHeight * this.scale
-    
-        this.fontMapScaledCtx.canvas.width = scaledWidth
-        this.fontMapScaledCtx.canvas.height = scaledHeight
-        this.fontMapScaledCtx.clearRect(0, 0, scaledWidth, scaledHeight)
-    
         term.setSize(this.width, this.height)
     }
     
@@ -126,20 +123,7 @@ class Term {
      * @param {number} ch
      */
     setChar(x, y, ch) {
-    
         this.#setChar(x, y, ch)
-        // this.termCanvasCtx.drawImage(
-        //     this.fontMapScaledCtx.canvas, 
-        //     // from x, y
-        //     (charX * charWidth + 1) * this.scale, (charY * charHeight + 1) * this.scale,
-        //     // from w, h 
-        //     charW, charH,
-        //     // to x, y 
-        //     x * charScreenWidth * this.scale, y * charScreenHeight * this.scale,
-        //     // to w, h 
-        //     charW, charH
-        // )
-        // console.log(ch)
     }
     
     /**

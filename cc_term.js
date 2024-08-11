@@ -64,23 +64,23 @@ class Term {
         this.clear()
     }
 
-    #scaleChar(ch) {
+    #setChar(x, y, ch) {
         let charY = Math.floor(ch / charMapWidth)
         let charX = ch % charMapWidth
     
-        let fromX = charX * charWidth
-        let toX = charX * charWidth * this.scale
+        let fromX = charX * charWidth + 1
+        let toX = x * charScreenWidth * this.scale
     
-        let fromY = charY * charHeight
-        let toY = charY * charHeight * this.scale
+        let fromY = charY * charHeight + 1
+        let toY = y * charScreenHeight * this.scale
     
-        this.fontMapScaledCtx.clearRect(toX, toY, charWidth * this.scale, charHeight * this.scale)
-        const imageData = fontMapCtx.getImageData(fromX, fromY, charWidth, charHeight)
+        this.termCanvasCtx.clearRect(toX, toY, charScreenWidth * this.scale, charScreenHeight * this.scale)
+        const imageData = fontMapCtx.getImageData(fromX, fromY, charScreenWidth, charScreenHeight)
         const data = imageData.data
-        for (let y = 0; y < charHeight; y++) {
-            for (let x = 0; x < charWidth; x++) {
+        for (let dy = 0; dy < charScreenHeight; dy++) {
+            for (let dx = 0; dx < charScreenWidth; dx++) {
                 // Get the color of the current pixel
-                const index = (y * charWidth + x) * 4;
+                const index = (dy * charScreenWidth + dx) * 4;
                 const r = data[index];
                 const g = data[index + 1];
                 const b = data[index + 2];
@@ -94,11 +94,12 @@ class Term {
                     // bg color
                     fillStyle = this.paletteColors[this.bg]
                 }
-                this.fontMapScaledCtx.fillStyle = fillStyle
+                this.termCanvasCtx.fillStyle = fillStyle
+
     
                 // Draw a scaled rectangle for the current pixel on the target canvas
                 // fontMapScaledCtx.fillStyle = rgbToFillstyle(r,g,b,a)
-                this.fontMapScaledCtx.fillRect(toX + x * this.scale, toY + y * this.scale, this.scale, this.scale)
+                this.termCanvasCtx.fillRect(toX + (dx * this.scale), toY + (dy * this.scale), this.scale, this.scale)
             }
         }
     }
@@ -114,10 +115,7 @@ class Term {
         this.fontMapScaledCtx.canvas.width = scaledWidth
         this.fontMapScaledCtx.canvas.height = scaledHeight
         this.fontMapScaledCtx.clearRect(0, 0, scaledWidth, scaledHeight)
-        
-        for (i = 0; i < 256; i++) {
-            this.#scaleChar(i)
-        }
+    
         term.setSize(this.width, this.height)
     }
     
@@ -128,24 +126,19 @@ class Term {
      * @param {number} ch
      */
     setChar(x, y, ch) {
-        let charY = Math.floor(ch / charMapWidth)
-        let charX = ch % charMapWidth
     
-        let charW = charScreenWidth * this.scale
-        let charH = charScreenHeight * this.scale
-    
-        this.#scaleChar(ch)
-        this.termCanvasCtx.drawImage(
-            this.fontMapScaledCtx.canvas, 
-            // from x, y
-            (charX * charWidth + 1) * this.scale, (charY * charHeight + 1) * this.scale,
-            // from w, h 
-            charW, charH,
-            // to x, y 
-            x * charScreenWidth * this.scale, y * charScreenHeight * this.scale,
-            // to w, h 
-            charW, charH
-        )
+        this.#setChar(x, y, ch)
+        // this.termCanvasCtx.drawImage(
+        //     this.fontMapScaledCtx.canvas, 
+        //     // from x, y
+        //     (charX * charWidth + 1) * this.scale, (charY * charHeight + 1) * this.scale,
+        //     // from w, h 
+        //     charW, charH,
+        //     // to x, y 
+        //     x * charScreenWidth * this.scale, y * charScreenHeight * this.scale,
+        //     // to w, h 
+        //     charW, charH
+        // )
         // console.log(ch)
     }
     

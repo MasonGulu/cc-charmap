@@ -21,9 +21,39 @@ function setColors(t) {
 	}
 }
 
+function copyToClipboard(text) {
+    // Create a temporary textarea element to hold the text
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+
+    // Prevent scrolling on small screens when copying large text
+    textarea.style.position = "fixed"; 
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    
+    // Make the textarea invisible
+    textarea.style.opacity = "0";
+
+    // Append the textarea to the document
+    document.body.appendChild(textarea);
+
+    // Select the text in the textarea
+    textarea.select();
+
+    try {
+        // Execute the copy command
+        const successful = document.execCommand("copy");
+    } catch (err) {
+        console.error("Failed to copy", err);
+    }
+
+    // Remove the textarea after copying
+    document.body.removeChild(textarea);
+}
+
 function render() {
 	setColors(term)
-	term.setScale(3);
+	term.setScale(2);
 	term.setSize(18, 17);
 	for (i = 0; i < 256; i++) {
 		term.setChar((i % 16) + 2, Math.floor(i / 16) + 1, i);
@@ -128,11 +158,11 @@ term.setClickHandler((x, y) => {
 	if (x >= 0 && y >= 0) {
 		let idx = y * 16 + x;
 		if (formattingMode == "dec") {
-			navigator.clipboard.writeText(`\\${idx}`);
+			copyToClipboard(`\\${idx}`);
 		} else if (formattingMode == "hex") {
-			navigator.clipboard.writeText(`\\x${idx.toString(16)}`);
+			copyToClipboard(`\\x${idx.toString(16)}`);
 		} else {
-			navigator.clipboard.writeText(String.fromCharCode(idx));
+			copyToClipboard(String.fromCharCode(idx));
 		}
 	}
 });

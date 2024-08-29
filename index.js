@@ -1,4 +1,4 @@
-let characterInfo = document.getElementById("characterInfo");
+let characterText = document.getElementById("characterText");
 let term = new Term(document.getElementById("term"));
 let charTerm = new Term(document.getElementById("charPreview"));
 
@@ -114,9 +114,10 @@ const formatButtons = document.querySelectorAll("#format > button");
 formatButtons.forEach((btn) => {
 	btn.addEventListener("click", (e) => {
 		e.preventDefault();
-		formattingMode = btn.innerHTML.toLowerCase();
+		formattingMode = btn.innerText.toLowerCase();
 		formatButtons.forEach((v) => v.classList.remove("active"));
 		btn.classList.add("active");
+		characterText.innerText = getCharacterText();
 	});
 });
 
@@ -126,12 +127,23 @@ setTimeout(function() {
 	render();
 }, 100)
 
-let currentChar = 0
+let selectedChar = 0
 function setChar(i) {
-	if (i != currentChar) {
-		currentChar = i;
+	if (i != selectedChar) {
+		selectedChar = i;
 		setColors(charTerm);
 		charTerm.setChar(0, 0, i);
+		characterText.innerText = getCharacterText();
+	}
+}
+
+function getCharacterText() {
+	if (formattingMode == "dec") {
+		return selectedChar.toString();
+	} else if (formattingMode == "hex") {
+		return `0x${('0' + selectedChar.toString(16)).slice(-2)}`;
+	} else {
+		return String.fromCharCode(selectedChar);
 	}
 }
 
@@ -139,31 +151,21 @@ term.setMousemoveHandler((x, y) => {
 	x -= 2;
 	y -= 1;
 	if (x >= 0 && y >= 0) {
-		let idx = y * 16 + x;
-		setChar(idx);
-		if (formattingMode == "dec") {
-			characterInfo.innerHTML = `Character: ${idx}`;
-		} else if (formattingMode == "hex") {
-			characterInfo.innerHTML = `Character: 0x${idx.toString(16)}`;
-		} else {
-			characterInfo.innerHTML = `Character: 0x${idx.toString(
-				16
-			)} (${String.fromCharCode(idx)})`;
-		}
+		setChar(y * 16 + x);
 	}
 });
 
+let clickedChar = 0;
 term.setClickHandler((x, y) => {
 	x -= 2;
 	y -= 1;
 	if (x >= 0 && y >= 0) {
-		let idx = y * 16 + x;
-		if (formattingMode == "dec") {
-			copyToClipboard(`\\${idx}`);
-		} else if (formattingMode == "hex") {
-			copyToClipboard(`\\x${idx.toString(16)}`);
-		} else {
-			copyToClipboard(String.fromCharCode(idx));
-		}
+		clickedChar = y * 16 + x
+		setChar(clickedChar);
+		copyToClipboard(getCharacterText());
 	}
+});
+
+term.termCanvas.addEventListener("mouseleave", function (e) {
+	setChar(clickedChar); // set back to last clicked character
 });
